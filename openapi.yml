@@ -1,0 +1,377 @@
+openapi: 3.0.3
+info:
+  title: Your Label Driver
+  description: |-
+
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://petstore3.swagger.io/api/v3
+tags:
+  - name: Options
+    description: All about shipping options
+    externalDocs:
+      description: Find out more about shipment options
+      url: http://swagger.io
+  - name: Shipment
+    externalDocs:
+      description: Find out more about creating shipments
+      url: http://swagger.io
+paths:
+  /options:
+    get:
+      tags:
+        - Options
+      summary: Available shipping options
+      description: An List of available shipping options that the driver provides
+      operationId: listShippingOptions
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Option'
+  /options/{id}:
+    get:
+      tags:
+        - Options
+      summary: Get Shipping option
+      description: Returns a single option
+      operationId: getShippingOption
+      parameters:
+        - name: id
+          in: path
+          description: ID of shipping option to return
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Option'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: option not found
+  /shipments:
+    post:
+      tags:
+        - Shipment
+      summary: Create a Shipment
+      description: Create a shipment
+      operationId: createShipment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Shipment'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+        '400':
+          description: Invalid input
+        '409':
+          description: Shipment with ID already exists
+  /shipments/{id}:
+    get:
+      tags:
+        - Shipment
+      summary: Get Shipment
+      description: Get a shipment that has been created
+      operationId: getOrderById
+      parameters:
+        - name: id
+          in: path
+          description: ID of order that needs to be fetched
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Shipment'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Shipment not found
+  /shipments/{id}/label:
+    get:
+      tags:
+        - Shipment
+      summary: Get shipping label
+      description: Retrieve an A6 label for the shipment
+      operationId: getShippingLabel
+      parameters:
+        - name: id
+          in: path
+          description: ID of order that needs to be fetched
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: A PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Order not found
+components:
+  schemas:
+    Option:
+      type: object
+      description: A Shipping option
+      properties:
+        id:
+          type: string
+          description: The Shipping option ID
+        title:
+          type: string
+          description: The Shipping option Title
+        description:
+          type: string
+          description: string
+        carrier:
+          type: string
+        characteristics:
+          type: object
+          description: a list of characteristics of the option
+          properties:
+            is_same_day:
+              type: boolean
+              default: null
+              description: Indicates whether the delivery is scheduled for the same day it was initiated, catering to scenarios where expedited delivery is necessary.
+            is_sunday:
+              type: boolean
+              default: null
+              description: Indication whether the delivery is scheduled for a Sunday, accommodating unique delivery requirements associated  with weekends.
+            is_pickup_point:
+              type: boolean
+              default: null
+              description: Whether this delivery is delivered at a pickup point
+            is_neighbour_allowed:
+              type: boolean
+              default: null
+              description: Whether it's allowed to deliver to the neighbors
+            is_signed:
+              type: boolean
+              default: null
+              description: Whether the delivery is signed
+            is_id_check:
+              type: boolean
+              default: null
+              description: Whether the delivery requires an ID check
+            is_dap:
+              type: boolean
+              default: null
+              description: Whether the seller is responsible for charges and risks (Delivered At Place)
+            is_evening_delivery:
+              type: boolean
+              default: null
+              description: Whether the delivery is delivered in the evening
+            is_insured:
+              type: boolean
+              default: null
+              description: Whether the delivery is insured
+        weight:
+          type: object
+          properties:
+            min:
+              type: integer
+              description: the minimal weight in grams that the shipment should way to use this option
+              format: int64
+            max:
+              type: integer
+              description: the maximal weight in grams that the shipment should way to use this option
+              format: int64
+        dimension:
+          type: object
+          properties:
+            length:
+              type: integer
+              format: int64
+            width:
+              type: integer
+              format: int64
+            height:
+              type: integer
+              format: int64
+        countries:
+          type: array
+          description: A list of countries which this option can be used to ship towards
+          items:
+            type: object
+            properties:
+              country_iso:
+                type: string
+                example: "NL"
+                description: The country iso
+              price:
+                type: integer
+                format: int64
+                description: the cost of creating the shipping label in cents
+                example: 995
+              currency:
+                type: string
+                description: the currency that goes with the cost
+                example: EUR
+    Shipment:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        option:
+          type: string
+        reference:
+          type: string
+        webhook_url:
+          description: The url where shipping updates are send too
+          type: string
+        recipient:
+          type: object
+          properties:
+            email:
+              type: string
+            phonenumber:
+              type: string
+            address:
+              $ref: '#/components/schemas/Address'
+        sender:
+          $ref: '#/components/schemas/Address'
+        amount:
+          type: integer
+          format: int64
+          description: The monetary value
+        currency:
+          type: string
+          example: EUR
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentItem'
+    Address:
+      type: object
+      properties:
+        country_code:
+          type: string
+          description: 'Two letter country code'
+          minLength: 2
+          example: NL
+        administrative_area:
+          type: string
+          description: 'The state or province name or abbreviation (optional)'
+          example: ''
+        locality:
+          type: string
+          description: City
+          example: Groningen
+          minLength: 1
+        dependent_locality:
+          type: string
+          description: 'Additional information about the locality (optional)'
+          example: ''
+        postal_code:
+          type: string
+          description: 'The complete postal code for the delivery point'
+          example: 9731DG
+          minLength: 4
+        sorting_code:
+          type: string
+          description: 'Allow sorting, for example to route mail (optional)'
+          example: ''
+        address_line_1:
+          type: string
+          description: 'The first address line'
+          example: 'Grondzijl 16'
+          minLength: 1
+        address_line_2:
+          type: string
+          description: 'The second address line (optional)'
+          example: ''
+        thoroughfare:
+          type: string
+          example: Grondzijl
+          description: The thoroughfare of the address (road, passageway)
+        premise_number:
+          type: integer
+          example: 16
+          description: The premise number of the address
+          minimum: 1
+        premise_number_suffix:
+          type: string
+          example: ''
+          description: The suffix for the premise number
+        organisation:
+          type: string
+          description: 'The name of the recipient, firm, or company at this address (optional)'
+          example: 'Afosto SaaS BV'
+        given_name:
+          type: string
+          description: 'First name'
+          example: Peter
+          minLength: 1
+        additional_name:
+          type: string
+          description: 'Patronymic'
+          example: ''
+        family_name:
+          type: string
+          description: 'Last name'
+          example: Bakker
+          minLength: 1
+        created_at:
+          readOnly: true
+          format: int64
+          type: integer
+          example: 1627895282
+    ShipmentItem:
+      type: object
+      properties:
+        sku:
+          type: string
+        quantity:
+          type: integer
+          format: int64
+        name:
+          type: string
+        hs_code:
+          type: string
+        weight:
+          type: integer
+          description: The weight in grams
+          format: int64
+        amount:
+          type: integer
+          format: int64
+          description: The monetary value
+
+
