@@ -27,21 +27,25 @@ tags:
       url: http://swagger.io
 paths:
   /options:
-    get:
+    post:
       tags:
         - Options
       summary: Available shipping options
       description: An List of available shipping options that the driver provides
       operationId: listShippingOptions
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentIntent'
       responses:
         '200':
           description: successful operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Option'
+                $ref: '#/components/schemas/ShipmentSuggestion'
   /options/{id}:
     get:
       tags:
@@ -120,12 +124,18 @@ paths:
         '404':
           description: Shipment not found
   /shipments/{id}/label:
-    get:
+    post:
       tags:
         - Shipment
       summary: Get shipping label
       description: Retrieve an A6 label for the shipment
       operationId: getShippingLabel
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelRequest'
       parameters:
         - name: id
           in: path
@@ -146,6 +156,26 @@ paths:
           description: Order not found
 components:
   schemas:
+    LabelRequest:
+      type: object
+      properties:
+        colli:
+          type: integer
+          example: 1
+          description: Amount of suggested colli
+    ShipmentSuggestion:
+      type: object
+      properties:
+        colli:
+          type: integer
+          example: 1
+          description: Amount of suggested colli
+        options:
+          type: array
+          description: Sorted options
+          items:
+            $ref: "#/components/schemas/Option"
+
     Option:
       type: object
       description: A Shipping option
@@ -265,6 +295,24 @@ components:
               type: string
             address:
               $ref: '#/components/schemas/Address'
+        sender:
+          $ref: '#/components/schemas/Address'
+        amount:
+          type: integer
+          format: int64
+          description: The monetary value
+        currency:
+          type: string
+          example: EUR
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentItem'
+    ShipmentIntent:
+      type: object
+      properties:
+        recipient:
+          $ref: '#/components/schemas/Address'
         sender:
           $ref: '#/components/schemas/Address'
         amount:
